@@ -1,0 +1,333 @@
+import java.awt.*;
+import java.io.InputStream;
+import java.util.Scanner;
+
+public class Maze {
+    private SimpleCanvas canvas; // the canvas the maze will be drawn on.
+
+    // Declare your instance variables here.
+    public char[][] maze = new char[100][100]; // the maze itself
+    private int numRows; // number of rows in the maze
+    private int numCols; // number of columns in the maze
+
+    private int pauseTimeMillis; // the time to pause between steps
+
+    private final int rectangleSize = 40;
+    private final int patronusSize = 8;
+    private final int breadcrumbSize = 4;
+
+    private final boolean[][] visited = new boolean[100][100]; // to keep track of where the patronus has been
+
+    private final char harry = 'H';
+    private final char cup = 'C';
+    private final char wall = '#';
+
+    private final String north = "N";
+    private final String south = "S";
+    private final String east = "E";
+    private final String west = "W";
+    private final String deadEnd = "X";
+
+    public Maze(String filename) { // you can add any parameters you want to the constructor
+        // Your code here.
+
+        // Load the maze from the file.
+        loadMaze(filename);
+
+        canvas = new SimpleCanvas(1500, 1500); // change these dimensions!
+        canvas.show();
+    }
+
+    public void setPauseTime(int pauseTimeMillis) {
+        this.pauseTimeMillis = pauseTimeMillis;
+    }
+
+    /**
+     * Load a maze from the given text file and store into appropriate
+     * instance variables.
+     */
+    private void loadMaze(String filename) {
+        InputStream is = Maze.class.getResourceAsStream(filename);
+        if (is == null) {
+            System.err.println("Could not open file: " + filename);
+            System.exit(1);
+        }
+        Scanner scan = new Scanner(is);
+
+        // Read the dimensions of the maze.
+        this.numRows = scan.nextInt();
+        this.numCols = scan.nextInt();
+        scan.nextLine(); // skip to the next line
+
+        int row = 0;
+
+        while (scan.hasNextLine()) {
+            // Write this loop to read each line of the maze itself
+            // and convert it into whatever format you're using.
+            // You may also add/modify other things outside of the loop, of course.
+            char[] line = scan.nextLine().toCharArray();
+            System.arraycopy(line, 0, this.maze[row], 0, line.length);
+            row++;
+        }
+    }
+
+    /**
+     * Draw the maze on the canvas.
+     */
+    public void drawMaze() {
+        canvas.clear();
+
+        // Write your maze-drawing code here.
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                if (maze[i][j] == wall) {
+                    canvas.setPenColor(Color.GRAY);
+                } else if (maze[i][j] == harry) {
+                    canvas.setPenColor(Color.RED);
+                } else if (maze[i][j] == cup) {
+                    canvas.setPenColor(Color.YELLOW);
+                } else {
+                    canvas.setPenColor(Color.WHITE);
+                }
+
+                canvas.drawFilledRectangle(j * rectangleSize, i * rectangleSize, rectangleSize, rectangleSize);
+
+                if (visited[i][j]) {
+                    canvas.setPenColor(Color.GREEN);
+                    canvas.drawFilledCircle(j * rectangleSize + rectangleSize / 2, i * rectangleSize + rectangleSize / 2, breadcrumbSize);
+                }
+            }
+        }
+
+        canvas.update();
+    }
+
+    /**
+     * Draw the maze on the canvas, including the current position of the patronus.
+     */
+    public void drawMazeWithPatronus(int patronusRow, int patronusCol) {
+        // Write your maze-drawing code here.  Also draw the patronus at the coordinates given.
+        canvas.clear();
+        drawMaze();
+        canvas.setPenColor(Color.CYAN);
+        canvas.drawFilledCircle(patronusCol * rectangleSize + rectangleSize / 2, patronusRow * rectangleSize + rectangleSize / 2, patronusSize);
+
+        canvas.update();
+    }
+
+    /**
+     * Initial function to get the recursion started for recursive formulation 1:
+     * Is it possible to solve this maze?
+     */
+    public boolean canSolve() {
+
+        // Find Harry's location in the maze.
+
+        drawMaze();
+        canvas.waitForClick();
+
+        // Now call canSolve, starting the patronus at whatever Harry's location is.
+        // Return the value that canSolve returns.
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                if (maze[i][j] == harry) {
+                    return canSolve(i, j);
+                }
+            }
+        }
+
+        return false; // remove this when you start.
+    }
+
+    /**
+     * Helper function for canSolve that takes the current position of the patronus
+     * as parameters.
+     */
+    private boolean canSolve(int patronusRow, int patronusCol) {
+        // Print that the patronus has arrived here.
+        // Draw the maze with the patronus.
+        // Pause the canvas for a moment.
+        visited[patronusRow][patronusCol] = true;
+        drawMazeWithPatronus(patronusRow, patronusCol);
+        canvas.pause(pauseTimeMillis);
+
+        // Base case: Are we done with the search?
+        // In other words, is the current location of the patronus where the cup is?
+        //   If yes, return true (indicating the cup was found).
+        //   If no, keep going below.
+        if (maze[patronusRow][patronusCol] == cup) {
+            return true;
+        }
+
+        // Drop a breadcrumb at the patronus's location.
+        System.out.println("Dropping breadcrumb at " + patronusRow + ", " + patronusCol);
+
+
+        // Can the patronus move NORTH from its current position?
+        //    If yes, try to solve the maze from one step north.
+        //    Examine the boolean value that is returned from the recursive call.
+        //    If this value is true, then that means the recursive call found a solution
+        //      and this call should return true as well.
+        if (patronusRow > 0 && maze[patronusRow - 1][patronusCol] != wall && !visited[patronusRow - 1][patronusCol]) {
+            if (canSolve(patronusRow - 1, patronusCol)) {
+                return true;
+            }
+        }
+
+        // Can the patronus move SOUTH from its current position?
+        //    If yes....(follow same idea as above)
+        // Same for EAST, then WEST.
+        if (patronusRow < numRows - 1 && maze[patronusRow + 1][patronusCol] != wall && !visited[patronusRow + 1][patronusCol]) {
+            if (canSolve(patronusRow + 1, patronusCol)) {
+                return true;
+            }
+        }
+
+        if (patronusCol < numCols - 1 && maze[patronusRow][patronusCol + 1] != wall && !visited[patronusRow][patronusCol + 1]) {
+            if (canSolve(patronusRow, patronusCol + 1)) {
+                return true;
+            }
+        }
+
+        if (patronusCol > 0 && maze[patronusRow][patronusCol - 1] != wall && !visited[patronusRow][patronusCol - 1]) {
+            if (canSolve(patronusRow, patronusCol - 1)) {
+                return true;
+            }
+        }
+
+        // If we get here, it means the patronus cannot find the cup from its current position,
+        // since trying all four possible directions failed (either all returned false, or the
+        // patronus couldn't move in that direction).  It therefore must be in a dead end.
+//        System.out.println("Backtracking from " + patronusRow + ", " + patronusCol);
+
+        // Pick up the breadcrumb from the current location because breadcrumbs only mark
+        // the solution, and the patronus didn't find one from here.
+        System.out.println("Picking up breadcrumb at " + patronusRow + ", " + patronusCol);
+        visited[patronusRow][patronusCol] = false;
+
+        // Print that the patronus has is about to backtrack from here.
+        // Draw the maze with the patronus.
+        // Pause the canvas for a moment.
+
+        drawMazeWithPatronus(patronusRow, patronusCol);
+        canvas.pause(pauseTimeMillis);
+
+        return false; // indicating the patronus failed, and should backtrack if possible.
+    }
+
+    /**
+     * Initial function to get the recursion started for recursive formulation 2:
+     * What are the directions (sequence of N/S/E/W steps) to solve the maze?
+     */
+    public String directionalSolve() {
+
+        // Find Harry's location in the maze.
+
+        drawMaze();
+        canvas.waitForClick();
+
+        // Now call directionalSolve, starting the patronus at whatever Harry's location is.
+        // Return the value that directionalSolve returns, modified appropriately.
+        // Hint: there may be an extra character!
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                if (maze[i][j] == harry) {
+                    return directionalSolve(i, j);
+                }
+            }
+        }
+
+        return "X"; // remove this when you start.
+    }
+
+    /**
+     * Helper function for directionalSolve().
+     */
+    private String directionalSolve(int patronusRow, int patronusCol) {
+        // Print that the patronus has arrived here.
+        // Draw the maze with the patronus.
+        // Pause the canvas for a moment.
+        visited[patronusRow][patronusCol] = true;
+        drawMazeWithPatronus(patronusRow, patronusCol);
+        canvas.pause(100);
+
+        // Base case: Are we done with the search?
+        // In other words, is the current location of the patronus where the cup is?
+        //   If yes, return "C" (indicating the cup was found here).
+        //   If no, keep going below.
+        if (maze[patronusRow][patronusCol] == cup) {
+            return "";
+        }
+
+        // Drop a breadcrumb at the patronus's location.
+        System.out.println("Dropping breadcrumb at " + patronusRow + ", " + patronusCol);
+
+        // Can the patronus move NORTH from its current position?
+        //    If yes, try to solve the maze from one step north.
+        //    Examine the String value that is returned from the recursive call.
+        //    If this value is not "X", then that means the recursive call found a solution
+        //      and this String is the path to the solution.
+        //    Update this String to reflect that we moved NORTH to find the solution,
+        //      then return the updated String.
+        if (patronusRow > 0 && maze[patronusRow - 1][patronusCol] != wall && !visited[patronusRow - 1][patronusCol]) {
+            String path = directionalSolve(patronusRow - 1, patronusCol);
+            if (!path.equals(deadEnd)) {
+                return north + path;
+            }
+        }
+
+        // Can the patronus move SOUTH from its current position?
+        //    If yes....(follow same idea as above)
+        // Same for EAST, then WEST.
+        if (patronusRow < numRows - 1 && maze[patronusRow + 1][patronusCol] != wall && !visited[patronusRow + 1][patronusCol]) {
+            String path = directionalSolve(patronusRow + 1, patronusCol);
+            if (!path.equals(deadEnd)) {
+                return south + path;
+            }
+        }
+
+        if (patronusCol < numCols - 1 && maze[patronusRow][patronusCol + 1] != wall && !visited[patronusRow][patronusCol + 1]) {
+            String path = directionalSolve(patronusRow, patronusCol + 1);
+            if (!path.equals(deadEnd)) {
+                return east + path;
+            }
+        }
+
+        if (patronusCol > 0 && maze[patronusRow][patronusCol - 1] != wall && !visited[patronusRow][patronusCol - 1]) {
+            String path = directionalSolve(patronusRow, patronusCol - 1);
+            if (!path.equals(deadEnd)) {
+                return west + path;
+            }
+        }
+
+        // If we get here, it means the patronus cannot find the cup from its current position,
+        // since trying all four possible directions failed (either all returned false, or the
+        // patronus couldn't move in that direction).  It therefore must be in a dead end.
+
+        // Pick up the breadcrumb from the current location because breadcrumbs only mark
+        // the solution, and the patronus didn't find one from here.
+
+        // Print that the patronus has is about to backtrack from here.
+        // Draw the maze with the patronus.
+        // Pause the canvas for a moment.
+        System.out.println("Picking up breadcrumb at " + patronusRow + ", " + patronusCol);
+        visited[patronusRow][patronusCol] = false;
+
+        drawMazeWithPatronus(patronusRow, patronusCol);
+        canvas.pause(100);
+
+        return deadEnd; // indicating the patronus failed, and should backtrack if possible.
+    }
+
+    public void printMaze() {
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                System.out.print(maze[i][j]);
+            }
+            System.out.println();
+        }
+    }
+}
+
+
+
