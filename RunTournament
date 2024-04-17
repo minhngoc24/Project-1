@@ -1,0 +1,72 @@
+import java.util.Scanner;
+
+public class RunTournament {
+    public static void main(String[] args) {
+        // testFileReading();
+        // testDrawing();
+        // testDrawingPatronus();
+        // testBooleanSolver();
+        // testDirectionalSolver();
+
+        // Write full program here when tests are done.
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter the name of the maze file: ");
+        String mazeFile = sc.nextLine();
+
+        Maze m = new Maze(mazeFile);
+
+        System.out.print("Pause milliseconds between steps: ");
+        m.setPauseTime(sc.nextInt());
+
+        System.out.print("Boolean (1) or Directional (2)? ");
+        int choice = sc.nextInt();
+
+        if (choice == 1) {
+            if (m.canSolve()) {
+                System.out.println("The maze can be solved!");
+            } else {
+                System.out.println("The maze cannot be solved.");
+            }
+        } else if (choice == 2) {
+            String path = m.directionalSolve();
+            if (!path.equals("X")) {
+                System.out.println("The maze can be solved! " + path + " steps.");
+            } else {
+                System.out.println("The maze cannot be solved.");
+            }
+        } else {
+            System.out.println("Invalid choice.");
+        }
+    }
+
+    public static void testFileReading() {
+        // Write me!
+        // Try something like:
+        Maze m = new Maze("maze1.txt");
+        m.printMaze(); // when you write this, this should print the maze
+    }
+
+    public static void testDrawing() {
+        // Write me!
+        Maze m = new Maze("maze1.txt");
+        m.drawMaze();
+    }
+
+    public static void testDrawingPatronus() {
+        // Write me!
+        Maze m = new Maze("maze1.txt");
+        m.drawMazeWithPatronus(1, 2);
+    }
+
+    public static void testBooleanSolver() {
+        // Write me!
+        Maze m = new Maze("maze4.txt");
+        System.out.println(m.canSolve());
+    }
+
+    public static void testDirectionalSolver() {
+        // Write me!
+        Maze m = new Maze("maze0.txt");
+        System.out.println(m.directionalSolve());
+    }
+}
