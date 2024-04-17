@@ -1,0 +1,79 @@
+import java.util.Scanner;
+
+/**
+ * Name: Minh Ngoc Le
+ * Class: Comp 142
+ * Date: 01/23/2024
+ * Pledge: I have neither given nor received unauthorized aid on this program.
+ * Description: Nim is a simple game where two players remove sticks from piles.
+ */
+public class Nim {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int pileA = 5;
+        int pileB = 4;
+        int pileC = 3;
+
+        int currentPlayer = 1;
+
+        while (true) {
+            System.out.println("Player " + currentPlayer + ", it's your turn");
+            System.out.println("Here is the board: ");
+            System.out.println("A  B  C");
+            System.out.println(pileA + "  " + pileB + "  " + pileC + "  ");
+
+            // Get user input for pile
+            System.out.println("Enter the pile: ");
+            String selectedPile = scanner.next().toUpperCase();
+
+            // If User input is different from A B or C
+            if(!(selectedPile.equals("A") || selectedPile.equals("B") || selectedPile.equals("C"))){
+                System.out.println("Invalid pile; please re-enter the pile:");
+                continue;
+            }
+
+            // Get user input for the number of sticks
+            System.out.println("How many sticks would you like to remove from pile " + selectedPile + "?");
+            int removeStick = scanner.nextInt();
+
+            // If the number of sticks to remove is not positive or higher than the current stick
+            if (selectedPile.equals("A")) {
+                if (removeStick > pileA || removeStick <= 0) {
+                    System.out.println("Invalid number of sticks; please re-enter number:");
+                    continue;
+                }
+            } else if (selectedPile.equals("B")) {
+                if (removeStick > pileB || removeStick <= 0) {
+                    System.out.println("Invalid number of sticks; please re-enter number:");
+                    continue;
+                }
+            } else if (selectedPile.equals("C")) {
+                if (removeStick > pileC || removeStick <= 0) {
+                    System.out.println("Invalid number of sticks; please re-enter number:");
+                    continue;
+                }
+            }
+
+            // Update the current stick:
+            if (selectedPile.equals("A")) {
+                pileA -= removeStick;
+            } else if (selectedPile.equals("B")) {
+                pileB -= removeStick;
+            } else if (selectedPile.equals("C")) {
+                pileC -= removeStick;
+            }
+
+            // End game
+            if (pileA + pileB + pileC == 0) {
+                int winner = 3 - currentPlayer;
+                System.out.println("The winner is player " + winner + "!");
+                break;
+            }
+
+            // Switch player
+            currentPlayer = 3 - currentPlayer;
+        }
+
+        // Close the scanner
+        scanner.close();
+    }
